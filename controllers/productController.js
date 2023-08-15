@@ -1,11 +1,33 @@
-const Product = require('../models/productModel')
+const {Product, Animal, Accessory} = require('../models/productModel')
 const {StatusCodes} = require('http-status-codes')
 const CustomError = require('../errors')
 const path = require('path')
 
 const createProduct = async(req, res) => {
+    //get the userID of the user creating the product from the request.user and assign it to the request body.
     req.body.user = req.user.userID
-    const product = await Product.create(req.body)
+
+    const {
+        itemNumber,
+        category,
+    } = req.body
+
+    //Check if the product already exists in the db.
+    const itemNum = await Product.findOne({itemNumber})
+
+    if(itemNum){
+        throw new CustomError.BadRequestError('This item already exists in the database, please update it as necessary.')
+    }
+
+    let product
+
+    if(category == "accessory"){
+        product = await Accessory.create(req.body)
+    } else if (category == 'animal'){
+        product = await Animal.create(req.body)
+    }
+
+    //Return new product to the user.
     res.status(StatusCodes.CREATED).json({product})
 }
 
@@ -36,12 +58,15 @@ const getSingleProduct = async(req, res) => {
     res.status(StatusCodes.OK).json({ product });
 }
 
+//Function to update a single product and return the new product to the user.
 const updateProduct = async (req, res) => {
     const { id: productID } = req.params
   
     const product = await Product.findOneAndUpdate(
         { _id:productID},
+        //Update the product with the new values for the field provided in the req.body.
         req.body,
+        //Run the input validators for the fields being updated and return the document after the changes have been made.
         {runValidators:true, returnDocument:'after'}
     )
   
@@ -49,9 +74,11 @@ const updateProduct = async (req, res) => {
       throw new CustomError.NotFoundError(`No product with id : ${productID}`)
     }
   
+    //Return the updated product to the user.
     res.status(StatusCodes.OK).json({ product })
 }
 
+//Function to delete a single product.
 const deleteProduct = async(req, res) => {
     const { id: productID } = req.params
     const product = await Product.findOne({ _id: productID })
