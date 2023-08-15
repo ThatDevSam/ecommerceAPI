@@ -12,6 +12,10 @@ const ProductSchema = new mongoose.Schema({
         required: [true, "Please provide a product price."],
         default: 0,
     },
+    salesAmount:{
+        type: Number, 
+        default: 0, 
+    },
     description:{
         type: String,
         required: [true, "Please provide a product description."],
@@ -26,19 +30,6 @@ const ProductSchema = new mongoose.Schema({
         required: [true, 'Please provide product category.'],
         enum: ['animal', 'accessory'],
     },
-    // company: {
-    //     type: String, 
-    //     required: [true, 'Please provide product company.'],
-    //     enum: {
-    //         values:['ikea', 'liddy', 'marcos'],
-    //         message: '{VALUE} is not supported.'
-    //     },
-    // },
-    colors: {
-        type: [String], 
-        default: ['#222'],
-        required: true,
-    },
     featured: {
         type: Boolean, 
         default: false,
@@ -51,6 +42,10 @@ const ProductSchema = new mongoose.Schema({
         type: Number, 
         required: true,
         default: 15,
+    },
+    itemNumber: {
+        type: Number, 
+        required: [true, "Please provide the item number for the product."]
     },
     averageRating: {
         type: Number, 
@@ -65,7 +60,6 @@ const ProductSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     }
-
 }, {
     timestamps: true, 
     //These objects allow this model to accept mongoose virtuals.
@@ -73,6 +67,38 @@ const ProductSchema = new mongoose.Schema({
     toObject:{virtuals:true}
    }
 )
+
+const animalSchema = new mongoose.Schema({
+    sex: {
+        type: String,
+        required: [true, "Please provide the sex of the animal."],
+        enum: ['male', 'female'],
+    },
+    age: {
+        type: String,
+        required: [true, "Please provide the age of the animal."],
+    },
+    species: {
+        type: String, 
+        required: [true, "Please provide the sex of the animal."],
+        enum: ['cat', 'dog', 'reptile', 'bird', 'fish']
+    },
+    classification: {
+        type: String,
+        required: [true, "Please provide the sex of the animal."],
+    }
+})
+
+const accessorySchema = new mongoose.Schema({
+    weight: {
+        type: Number,
+        required: [true, "Please provide the weight of the accessory."],
+    },
+    brand: {
+        type: String,
+        required: [true, "Please provide the brand of the accessory."]
+    }
+})
 
 //This virtually, meaning it doesn't live on the db, connects the Products model and Reviews Model. It adds a reviews field to the product model that will be populated with all the reviews associated a single product when the getSingleProduct controller is called.
 ProductSchema.virtual('reviews', {
@@ -88,4 +114,12 @@ ProductSchema.pre('deleteOne', {document: true, query: false}, async function(){
     await this.model('Review').deleteMany({ product: this._id });
 })
 
-module.exports = mongoose.model('Product', ProductSchema)
+const Product = mongoose.model('Product', ProductSchema)
+
+//These schemas will inherit the fields of the Product schema and define their own.
+//These discriminators will enable the server to differentiate between animals and accessories easily.
+//In the db they will have either 'Animal' or 'Accessory' in the __t: field.
+const Animal = Product.discriminator('Animal', animalSchema)
+const Accessory = Product.discriminator('Accessory', accessorySchema)
+
+module.exports = {Product, Animal, Accessory}
