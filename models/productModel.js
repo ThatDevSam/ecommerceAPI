@@ -1,3 +1,4 @@
+const { Decimal128 } = require('bson')
 const mongoose = require('mongoose')
 
 const ProductSchema = new mongoose.Schema({
@@ -13,7 +14,7 @@ const ProductSchema = new mongoose.Schema({
         default: 0,
     },
     salesAmount:{
-        type: Number, 
+        type: Decimal128, 
         default: 0, 
     },
     description:{
@@ -72,7 +73,7 @@ const animalSchema = new mongoose.Schema({
     sex: {
         type: String,
         required: [true, "Please provide the sex of the animal."],
-        enum: ['male', 'female'],
+        enum: ['male', 'female', 'mixed batch'],
     },
     age: {
         type: String,
@@ -91,7 +92,7 @@ const animalSchema = new mongoose.Schema({
 
 const accessorySchema = new mongoose.Schema({
     weight: {
-        type: Number,
+        type: String,
         required: [true, "Please provide the weight of the accessory."],
     },
     brand: {
