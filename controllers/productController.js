@@ -32,8 +32,47 @@ const createProduct = async(req, res) => {
 }
 
 const getAllProducts = async(req, res) => {
-    const products = await Product.find({})
-    res.status(StatusCodes.OK).json({products, count: products.length})
+    const {search, category, freeShipping, sale, sex, species, sort} = req.query
+
+    //Initalize the queryObject to an empty object so that if there are no search result an empty object will be submitted to the db. This will return all documents from the db.
+    const queryObject = {}
+
+    //Check if these elements are present in the query string, and then add them to the queryObject.
+    if (search) {
+        queryObject.name = { $regex: search, $options: 'i' };
+    }
+    if(freeShipping){
+        queryObject.freeShipping = true
+    }
+    //If sale is included in the query string find documents where the salesAmount is greater than 0.
+    if(sale){
+        queryObject.salesAmount = {$gt: 0}
+    }
+    if(category){
+        queryObject.category = category
+        if(category == 'animal'){
+            if(sex){
+                queryObject.sex = sex
+            }
+            if(species){
+                queryObject.species = species
+            }
+        }
+    }
+
+    //Query the db.
+    let result = await Product.find(queryObject)
+
+    //Sort the results of the query.
+    if(sort == 'lowest'){
+        result = result.sort('price')
+    } else if (sort == 'highest'){
+        result = result.sort('-price')
+    }
+
+    // res.status(StatusCodes.OK).json({products, count: products.length})
+    res.status(StatusCodes.OK).json({result})
+
 }
 
 //Function to returned a specified number of featured products.
