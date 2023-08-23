@@ -32,7 +32,8 @@ const createProduct = async(req, res) => {
 }
 
 const getAllProducts = async(req, res) => {
-    const {search, category, freeShipping, sale, sex, species, sort} = req.query
+    const {search, category, freeShipping, onSale, sex, species, sort, price} = req.query
+    console.log(category)
 
     //Initalize the queryObject to an empty object so that if there are no search result an empty object will be submitted to the db. This will return all documents from the db.
     const queryObject = {}
@@ -45,7 +46,7 @@ const getAllProducts = async(req, res) => {
         queryObject.freeShipping = true
     }
     //If sale is included in the query string find documents where the salesAmount is greater than 0.
-    if(sale){
+    if(onSale){
         queryObject.salesAmount = {$gt: 0}
     }
     if(category){
@@ -59,6 +60,12 @@ const getAllProducts = async(req, res) => {
             }
         }
     }
+    if(price){
+        //Create an array of the min and max prices from the dash seperated string.
+        priceRange = price.split('-')
+        //Find all documents where the price field is greater than or equal to the min and less than or equal to the max.
+        queryObject.price = {$gte: priceRange[0], $lte: priceRange[1]}
+    }
 
     //Query the db.
     let result = await Product.find(queryObject)
@@ -70,8 +77,11 @@ const getAllProducts = async(req, res) => {
         result = result.sort('-price')
     }
 
+    const totalProducts = await Product.countDocuments(queryObject)
+    console.log(totalProducts)
+
     // res.status(StatusCodes.OK).json({products, count: products.length})
-    res.status(StatusCodes.OK).json({result})
+    res.status(StatusCodes.OK).json({numOfResults: totalProducts, result})
 
 }
 
