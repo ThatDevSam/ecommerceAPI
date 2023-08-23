@@ -33,7 +33,6 @@ const createProduct = async(req, res) => {
 
 const getAllProducts = async(req, res) => {
     const {search, category, freeShipping, onSale, sex, species, sort, price} = req.query
-    console.log(category)
 
     //Initalize the queryObject to an empty object so that if there are no search result an empty object will be submitted to the db. This will return all documents from the db.
     const queryObject = {}
@@ -67,18 +66,20 @@ const getAllProducts = async(req, res) => {
         queryObject.price = {$gte: priceRange[0], $lte: priceRange[1]}
     }
 
-    //Query the db.
-    let result = await Product.find(queryObject)
-
     //Sort the results of the query.
+   let sortOrder
     if(sort == 'lowest'){
-        result = result.sort('price')
+        //Sort in ascending order.
+        sortOrder = ({'price':1})
     } else if (sort == 'highest'){
-        result = result.sort('-price')
+        //Sort in decending order.
+        sortOrder = ({'price':-1})
     }
 
+    //Query the db.
+    let result = await Product.find(queryObject).sort(sortOrder)
+
     const totalProducts = await Product.countDocuments(queryObject)
-    console.log(totalProducts)
 
     // res.status(StatusCodes.OK).json({products, count: products.length})
     res.status(StatusCodes.OK).json({numOfResults: totalProducts, result})
