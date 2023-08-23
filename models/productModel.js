@@ -13,6 +13,10 @@ const ProductSchema = new mongoose.Schema({
         required: [true, "Please provide a product price."],
         default: 0,
     },
+    onSale:{
+        type: Boolean,
+        default: false,
+    },
     salesAmount:{
         type: Decimal128, 
         default: 0, 
@@ -30,6 +34,11 @@ const ProductSchema = new mongoose.Schema({
         type: String, 
         required: [true, 'Please provide product category.'],
         enum: ['animal', 'accessory'],
+    },
+    species: {
+        type: String, 
+        required: [true, "Please provide the species of animal or the species the product was made for."],
+        enum: ['cat', 'dog', 'reptile', 'bird', 'fish']
     },
     featured: {
         type: Boolean, 
@@ -79,14 +88,9 @@ const animalSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please provide the age of the animal."],
     },
-    species: {
-        type: String, 
-        required: [true, "Please provide the sex of the animal."],
-        enum: ['cat', 'dog', 'reptile', 'bird', 'fish']
-    },
     classification: {
         type: String,
-        required: [true, "Please provide the sex of the animal."],
+        required: [true, "Please provide the classification of the animal."],
     }
 })
 
@@ -98,7 +102,7 @@ const accessorySchema = new mongoose.Schema({
     brand: {
         type: String,
         required: [true, "Please provide the brand of the accessory."]
-    }
+    },
 })
 
 //This virtually, meaning it doesn't live on the db, connects the Products model and Reviews Model. It adds a reviews field to the product model that will be populated with all the reviews associated a single product when the getSingleProduct controller is called.
